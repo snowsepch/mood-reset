@@ -24,7 +24,6 @@
     position:absolute;
     top:0;
     left:0;
-    transform-origin:top left;
     filter:drop-shadow(0 40px 70px rgba(0,0,0,.55));
   }
   .marvel-device .screen iframe{
@@ -67,13 +66,13 @@
   var device = document.getElementById("marvel-device");
 
   function fitDevice(){
-    device.style.transform = "none";
+    device.style.zoom = "1";
     var rect = device.getBoundingClientRect();
     var naturalW = rect.width;
     var naturalH = rect.height;
     var maxW = Math.min(naturalW, window.innerWidth * 0.9, window.innerHeight * 0.92 * (naturalW / naturalH));
     var scale = maxW / naturalW;
-    device.style.transform = "scale(" + scale + ")";
+    device.style.zoom = String(scale);
     wrap.style.width = (naturalW * scale) + "px";
     wrap.style.height = (naturalH * scale) + "px";
   }
