@@ -163,9 +163,6 @@
     gap:10px;
     margin-bottom:18px;
   }
-  @media (min-width:640px){
-    .chip-grid{grid-template-columns:repeat(4,1fr);}
-  }
   .chip{
     display:flex;
     flex-direction:column;
@@ -1440,6 +1437,69 @@
 
   initCounter();
   updateShredButton();
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  var isWideEnough = window.matchMedia("(min-width: 880px)").matches;
+  var isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  if(!isWideEnough || isCoarsePointer){ return; }
+
+  var style = document.createElement("style");
+  style.textContent =
+    ".frame-scale-wrap{position:relative;}" +
+    "#marvel-device{position:absolute;top:0;left:0;transform-origin:top left;filter:drop-shadow(0 40px 70px rgba(0,0,0,.55));}" +
+    ".marvel-device .screen{display:flex;flex-direction:column;align-items:center;}";
+  document.head.appendChild(style);
+
+  var link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "https://cdn.jsdelivr.net/gh/marvelapp/devices.css@master/assets/devices.min.css";
+  document.head.appendChild(link);
+
+  var wrap = document.createElement("div");
+  wrap.className = "frame-scale-wrap";
+  wrap.id = "frame-scale-wrap";
+
+  var device = document.createElement("div");
+  device.className = "marvel-device iphone-x";
+  device.id = "marvel-device";
+  device.innerHTML =
+    '<div class="notch"><div class="camera"></div><div class="speaker"></div></div>' +
+    '<div class="top-bar"></div><div class="sleep"></div><div class="bottom-bar"></div><div class="volume"></div>' +
+    '<div class="overflow"><div class="shadow shadow--tr"></div><div class="shadow shadow--tl"></div><div class="shadow shadow--br"></div><div class="shadow shadow--bl"></div></div>' +
+    '<div class="inner-shadow"></div>';
+
+  var screen = document.createElement("div");
+  screen.className = "screen";
+
+  while(document.body.firstChild){
+    screen.appendChild(document.body.firstChild);
+  }
+
+  device.appendChild(screen);
+  wrap.appendChild(device);
+  document.body.appendChild(wrap);
+
+  function fitDevice(){
+    device.style.transform = "none";
+    var rect = device.getBoundingClientRect();
+    var naturalW = rect.width;
+    var naturalH = rect.height;
+    if(naturalW === 0 || naturalH === 0){ return; }
+    var maxW = Math.min(naturalW, window.innerWidth * 0.5, window.innerHeight * 0.85 * (naturalW / naturalH));
+    var scale = maxW / naturalW;
+    device.style.transform = "scale(" + scale + ")";
+    wrap.style.width = (naturalW * scale) + "px";
+    wrap.style.height = (naturalH * scale) + "px";
+  }
+
+  link.addEventListener("load", function(){
+    fitDevice();
+    window.addEventListener("resize", fitDevice);
+  });
+  window.setTimeout(fitDevice, 400);
 })();
 </script>
 </body>
