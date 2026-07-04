@@ -537,6 +537,7 @@
       0 0 60px rgba(224,177,94,.55),
       inset 0 -10px 24px rgba(0,0,0,.35),
       inset 0 8px 20px rgba(255,255,255,.25);
+    transition:filter .1s ease;
   }
   .smash-orb.hit-a, .smash-orb.hit-b{
     animation:orbPunch .2s ease;
@@ -1309,7 +1310,13 @@
     });
   }
 
+  function flashOrb(){
+    smashOrb.style.filter = "brightness(1.7)";
+    window.setTimeout(function(){ smashOrb.style.filter = ""; }, 100);
+  }
+
   function punchOrb(){
+    flashOrb();
     if(reduceMotion) return;
     punchToggle = !punchToggle;
     smashOrb.classList.remove(punchToggle ? "hit-b" : "hit-a");
