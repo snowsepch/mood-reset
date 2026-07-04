@@ -291,10 +291,17 @@
     position:fixed;
     inset:0;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
+    gap:24px;
     padding:max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
     z-index:50;
+  }
+  .overlay-close{
+    position:absolute;
+    top:max(20px, env(safe-area-inset-top));
+    right:max(20px, env(safe-area-inset-right));
   }
   .overlay.hidden{display:none;}
   #shred-overlay{
@@ -428,13 +435,6 @@
     background:rgba(6,8,16,.82);
     -webkit-backdrop-filter:blur(10px);
     backdrop-filter:blur(10px);
-    flex-direction:column;
-    gap:28px;
-  }
-  #breathe-overlay .breathe-top{
-    position:absolute;
-    top:max(20px, env(safe-area-inset-top));
-    right:max(20px, env(safe-area-inset-right));
   }
   .breathe-circle{
     width:160px;height:160px;
@@ -648,7 +648,7 @@
   </main>
 
   <div class="overlay hidden" id="breathe-overlay">
-    <button type="button" class="icon-btn breathe-top" id="breathe-skip">
+    <button type="button" class="icon-btn overlay-close" id="breathe-skip">
       <i class="ph ph-x"></i>提前結束
     </button>
     <div class="breathe-circle" id="breathe-circle" aria-live="polite">吸氣</div>
@@ -656,7 +656,7 @@
   </div>
 
   <div class="overlay hidden" id="smash-overlay">
-    <button type="button" class="icon-btn breathe-top" id="smash-skip">
+    <button type="button" class="icon-btn overlay-close" id="smash-skip">
       <i class="ph ph-x"></i>先不打了
     </button>
     <div class="overlay-inner smash-panel">
