@@ -24,6 +24,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  button{touch-action:manipulation;}
   body{
     min-height:100dvh;
     background:var(--bg);
@@ -891,12 +892,13 @@
   var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   var recognition = null;
   var isListening = false;
+  var manualStop = false;
 
   if(SpeechRec){
     micBtn.hidden = false;
     recognition = new SpeechRec();
     recognition.lang = "zh-TW";
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onresult = function(event){
@@ -912,8 +914,27 @@
         ventText.dispatchEvent(new Event("input"));
       }
     };
-    recognition.onerror = function(){ stopListening(); };
-    recognition.onend = function(){ stopListening(); };
+
+    recognition.onerror = function(event){
+      manualStop = true;
+      var reason = event && event.error;
+      if(reason === "not-allowed" || reason === "service-not-allowed"){
+        voiceHint.textContent = "語音辨識需要麥克風權限，請到手機設定允許，或直接點鍵盤上的麥克風圖示，口說轉文字。";
+      }else{
+        voiceHint.textContent = "這台裝置的語音辨識暫時無法使用，請直接點手機鍵盤上的麥克風圖示，口說轉文字。";
+      }
+      resetMicUI();
+    };
+
+    recognition.onend = function(){
+      if(isListening && !manualStop){
+        try{
+          recognition.start();
+          return;
+        }catch(e){}
+      }
+      resetMicUI();
+    };
 
     micBtn.addEventListener("click", function(){
       if(isListening){ stopListening(); }else{ startListening(); }
@@ -924,6 +945,7 @@
 
   function startListening(){
     if(!recognition) return;
+    manualStop = false;
     try{
       recognition.start();
       isListening = true;
@@ -932,13 +954,20 @@
       micBtn.setAttribute("aria-label", "停止語音輸入");
       micBtn.innerHTML = '<i class="ph-fill ph-circle"></i>';
     }catch(e){
-      stopListening();
+      voiceHint.textContent = "這台裝置的語音辨識暫時無法使用，請直接點手機鍵盤上的麥克風圖示，口說轉文字。";
+      resetMicUI();
     }
   }
 
   function stopListening(){
-    if(!recognition) return;
-    try{ recognition.stop(); }catch(e){}
+    manualStop = true;
+    if(recognition){
+      try{ recognition.stop(); }catch(e){}
+    }
+    resetMicUI();
+  }
+
+  function resetMicUI(){
     isListening = false;
     micBtn.classList.remove("listening");
     micBtn.setAttribute("aria-pressed", "false");
