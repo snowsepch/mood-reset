@@ -2,84 +2,1444 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>情緒重開機｜門市深呼吸碎紙機</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/marvelapp/devices.css@master/assets/devices.min.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 <style>
+  :root{
+    --bg:#0A0E1A;
+    --panel-top:rgba(22,30,54,.86);
+    --panel-bottom:rgba(14,20,38,.86);
+    --panel-solid:#141B30;
+    --ink:#E8EAF0;
+    --ink-soft:#8A93A8;
+    --line:rgba(180,195,230,.16);
+    --accent:#E0B15E;
+    --accent-bright:#F3CA82;
+    --accent-ink:#211705;
+    --radius-pill:999px;
+    --radius-panel:20px;
+    --glow-accent:0 10px 30px rgba(224,177,94,.28);
+    --glow-panel:0 20px 50px rgba(0,0,0,.5);
+  }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  button{touch-action:manipulation;}
   body{
     min-height:100dvh;
-    background:radial-gradient(circle at 50% 20%, #26241f 0%, #141310 70%);
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Heiti TC",system-ui,-apple-system,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    overflow-x:hidden;
+  }
+  #starfield{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    pointer-events:none;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background:
+      radial-gradient(circle at 18% -6%, rgba(224,177,94,.20), transparent 42%),
+      radial-gradient(circle at 92% 6%, rgba(122,145,217,.16), transparent 40%),
+      radial-gradient(circle at 50% 115%, rgba(94,140,180,.12), transparent 45%);
+  }
+  .app{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:520px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    padding:24px 16px calc(env(safe-area-inset-bottom,0px) + 32px);
+  }
+
+  .hero-bar{
+    position:relative;
+    z-index:2;
+    width:100%;
+    text-align:center;
+    color:var(--ink);
+    background:linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+    -webkit-backdrop-filter:blur(24px) saturate(150%);
+    backdrop-filter:blur(24px) saturate(150%);
+    border-bottom:1px solid var(--line);
+    border-radius:0 0 28px 28px;
+    box-shadow:var(--glow-panel), inset 0 1px 0 rgba(255,255,255,.06);
+    padding:calc(env(safe-area-inset-top,0px) + 26px) 20px 30px;
+  }
+  .sound-toggle{
+    position:absolute;
+    top:max(16px, env(safe-area-inset-top));
+    right:max(16px, env(safe-area-inset-right));
+    z-index:3;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.05);
+    color:var(--ink-soft);
     display:flex;
     align-items:center;
     justify-content:center;
-    padding:24px 16px;
-    overflow-x:hidden;
+    font-size:17px;
+    cursor:pointer;
   }
-  .frame-scale-wrap{
+  .sound-toggle.on{
+    color:var(--accent-bright);
+    border-color:var(--accent);
+  }
+  .hero-bar .kicker{
+    font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    font-size:11px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:14px;
+  }
+  .hero-bar .icon-badge{
+    width:58px;height:58px;
+    margin:0 auto 12px;
+    border-radius:50%;
+    background:linear-gradient(160deg, var(--accent-bright) 0%, var(--accent) 100%);
+    color:var(--accent-ink);
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;
+    box-shadow:var(--glow-accent);
+  }
+  .hero-bar h1{
+    font-size:clamp(26px,7vw,32px);
+    font-weight:800;
+    margin:0;
+    color:#FFFFFF;
+    letter-spacing:.01em;
+  }
+  .hero-bar p{
+    margin:8px auto 0;
+    max-width:320px;
+    font-size:14px;
+    line-height:1.65;
+    color:var(--ink-soft);
+  }
+
+  main, .overlay-inner{
     position:relative;
+    z-index:2;
+    background:linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+    -webkit-backdrop-filter:blur(20px) saturate(150%);
+    backdrop-filter:blur(20px) saturate(150%);
+    border:1px solid var(--line);
+    border-radius:var(--radius-panel);
+    box-shadow:var(--glow-panel), inset 0 1px 0 rgba(255,255,255,.05);
+    padding:22px 18px;
   }
-  #marvel-device{
-    position:absolute;
-    top:0;
-    left:0;
-    filter:drop-shadow(0 40px 70px rgba(0,0,0,.55));
+  @media (prefers-reduced-transparency: reduce){
+    .hero-bar, main, .overlay-inner, .paper-card{
+      background:var(--panel-solid) !important;
+      -webkit-backdrop-filter:none !important;
+      backdrop-filter:none !important;
+    }
   }
-  .marvel-device .screen iframe{
-    width:100%;
-    height:100%;
-    border:0;
+  .section-label{
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 12px;
+  }
+  .chip-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
+  @media (min-width:640px){
+    .chip-grid{grid-template-columns:repeat(4,1fr);}
+  }
+  .chip{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    padding:14px 8px;
+    border-radius:16px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+    color:var(--ink);
+    font-size:12.5px;
+    font-weight:600;
+    line-height:1.3;
+    text-align:center;
+    transition:transform .15s ease, background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .chip i{font-size:22px;color:var(--accent);}
+  .chip:active{transform:scale(0.96);}
+  .chip.selected{
+    background:linear-gradient(160deg, var(--accent-bright) 0%, var(--accent) 100%);
+    color:var(--accent-ink);
+    border-color:transparent;
+    box-shadow:var(--glow-accent);
+  }
+  .chip.selected i{color:var(--accent-ink);}
+  .divider-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:4px 0 10px;
+  }
+  .divider-text{
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .mic-btn{
+    flex:none;
+    width:38px;height:38px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.04);
+    color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;
+    cursor:pointer;
+    transition:transform .15s ease, background .2s ease, box-shadow .2s ease, color .2s ease;
+  }
+  .mic-btn:active{transform:scale(0.94);}
+  .mic-btn.listening{
+    background:linear-gradient(160deg, var(--accent-bright) 0%, var(--accent) 100%);
+    color:var(--accent-ink);
+    animation:micPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes micPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(224,177,94,.45), var(--glow-accent);}
+    50%{box-shadow:0 0 0 10px rgba(224,177,94,0), var(--glow-accent);}
+  }
+  .voice-hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:10px 2px 0;
+    line-height:1.5;
+  }
+  label.field-label{
     display:block;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  textarea{
+    width:100%;
+    resize:none;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.04);
+    color:var(--ink);
+    padding:12px 14px;
+    font-size:15px;
+    font-family:inherit;
+    line-height:1.6;
+    min-height:84px;
+  }
+  textarea:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  textarea::placeholder{color:var(--ink-soft);opacity:0.75;}
+  .btn{
+    font-family:inherit;
+    border:none;
+    cursor:pointer;
+    border-radius:var(--radius-pill);
+    font-size:15px;
+    font-weight:700;
+    padding:14px 20px;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:transform .12s ease, opacity .2s ease, box-shadow .2s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background:linear-gradient(160deg, var(--accent-bright) 0%, var(--accent) 100%);
+    color:var(--accent-ink);
+    margin-top:18px;
+    box-shadow:var(--glow-accent);
+  }
+  .btn-primary[disabled]{opacity:0.35;pointer-events:none;box-shadow:none;}
+  .btn-outline{
+    background:rgba(255,255,255,.04);
+    color:var(--ink);
+    border:1px solid var(--line);
+  }
+  .stack{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+  #stage-response{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:6px;
+  }
+  #stage-response.hidden{display:none;}
+  #stage-response .response-icon{
+    width:58px;height:58px;
+    border-radius:50%;
+    background:linear-gradient(160deg, var(--accent-bright) 0%, var(--accent) 100%);
+    color:var(--accent-ink);
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;
+    margin-bottom:8px;
+    box-shadow:var(--glow-accent);
+  }
+  #stage-response .response-line{
+    font-size:17px;
+    line-height:1.7;
+    font-weight:600;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  #stage-select.hidden{display:none;}
+  .overlay{
+    position:fixed;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:24px;
+    padding:max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    z-index:50;
+  }
+  .overlay-close{
+    position:absolute;
+    top:max(20px, env(safe-area-inset-top));
+    right:max(20px, env(safe-area-inset-right));
+  }
+  .overlay.hidden{display:none;}
+  #shred-overlay{
+    background:rgba(6,8,16,.7);
+  }
+  #smash-overlay{
+    background:rgba(6,8,16,.7);
+  }
+  .shake-it{
+    animation:overlayShake .3s ease;
+  }
+  @keyframes overlayShake{
+    0%{transform:translate(0,0) scale(1);}
+    15%{transform:translate(-11px,6px) scale(1.06);}
+    35%{transform:translate(10px,-8px) scale(1.06);}
+    55%{transform:translate(-7px,-6px) scale(1.03);}
+    75%{transform:translate(6px,7px) scale(1.02);}
+    100%{transform:translate(0,0) scale(1);}
+  }
+  .micro-shake-a, .micro-shake-b{
+    animation:microShake .16s ease;
+  }
+  @keyframes microShake{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(6px,-6px) scale(1.02);}
+  }
+  .flash-bomb{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:55;
+    background:radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(224,177,94,.65) 30%, transparent 72%);
+    opacity:0;
+    animation:flashPulse .42s ease-out forwards;
+  }
+  @keyframes flashPulse{
+    0%{opacity:0;}
+    12%{opacity:0.95;}
+    100%{opacity:0;}
+  }
+  .micro-flash{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:54;
+    background:var(--accent);
+    opacity:0;
+    animation:microFlashPulse .18s ease-out forwards;
+  }
+  @keyframes microFlashPulse{
+    0%{opacity:0;}
+    30%{opacity:0.22;}
+    100%{opacity:0;}
+  }
+  .shockwave{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:20px;
+    height:20px;
+    margin:-10px 0 0 -10px;
+    border-radius:50%;
+    border:4px solid var(--accent-bright);
+    opacity:0.9;
+    pointer-events:none;
+    z-index:52;
+    box-shadow:0 0 30px rgba(224,177,94,.6);
+    animation:shockwaveExpand .6s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  .shockwave.wave-2{
+    border-color:#FFFFFF;
+    animation:shockwaveExpand .7s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes shockwaveExpand{
+    0%{width:20px;height:20px;margin:-10px 0 0 -10px;opacity:0.9;border-width:6px;}
+    100%{width:560px;height:560px;margin:-280px 0 0 -280px;opacity:0;border-width:1px;}
+  }
+  .burst-rays{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:10px;
+    height:10px;
+    margin:-5px 0 0 -5px;
+    border-radius:50%;
+    background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.95) 0deg 4deg, transparent 4deg 20deg);
+    opacity:0.95;
+    pointer-events:none;
+    z-index:53;
+    animation:burstRaysExpand .5s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes burstRaysExpand{
+    0%{width:10px;height:10px;margin:-5px 0 0 -5px;opacity:0.95;}
+    100%{width:560px;height:560px;margin:-280px 0 0 -280px;opacity:0;}
+  }
+  .paper-card{
+    background:linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+    -webkit-backdrop-filter:blur(20px) saturate(150%);
+    backdrop-filter:blur(20px) saturate(150%);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 22px;
+    max-width:280px;
+    font-size:15px;
+    font-weight:600;
+    text-align:center;
+    box-shadow:var(--glow-panel);
+    color:var(--ink);
+  }
+  .paper-card.shaking{
+    animation:paperShake .26s ease;
+  }
+  .paper-card.gone{
+    opacity:0;
+    transform:scale(0.7);
+    transition:opacity .1s ease, transform .1s ease;
+  }
+  @keyframes paperShake{
+    0%{transform:scale(1) rotate(0deg);}
+    15%{transform:scale(1.16) rotate(-11deg);}
+    30%{transform:scale(1.16) rotate(11deg);}
+    45%{transform:scale(1.1) rotate(-8deg);}
+    60%{transform:scale(1.1) rotate(8deg);}
+    75%{transform:scale(1.04) rotate(-4deg);}
+    100%{transform:scale(1) rotate(0deg);}
+  }
+  .shred-bit{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:var(--w, 14px);
+    height:var(--h, 6px);
+    border-radius:2px;
+    background:var(--accent);
+    opacity:1;
+    box-shadow:0 0 8px rgba(224,177,94,.7);
+    animation:shredFly var(--dur, 950ms) cubic-bezier(.12,.75,.3,1) forwards;
+    animation-delay:var(--delay);
+  }
+  @keyframes shredFly{
+    0%{transform:translate(-50%,-50%) rotate(0deg) scale(1);opacity:1;}
+    100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(0.4);opacity:0;}
+  }
+  #breathe-overlay{
+    background:rgba(6,8,16,.82);
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+  }
+  .breathe-circle{
+    width:160px;height:160px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(224,177,94,.28), rgba(224,177,94,.06));
+    border:2px solid var(--accent);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--accent-bright);
+    font-size:15px;
+    font-weight:700;
+    box-shadow:0 0 50px rgba(224,177,94,.35);
+    transform:scale(1);
+    transition:transform 4000ms ease-in-out;
+  }
+  .breathe-circle.inhale{transform:scale(1.35);transition:transform 4000ms ease-in-out;}
+  .breathe-circle.hold{transition:transform 1600ms linear;}
+  .breathe-circle.exhale{transform:scale(1);transition:transform 6000ms ease-in-out;}
+  .breathe-caption{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    max-width:260px;
+  }
+  #breathe-overlay.hidden{display:none;}
+  .icon-btn{
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    border-radius:var(--radius-pill);
+    padding:8px 14px;
+    font-size:12.5px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+  .smash-panel{
+    max-width:420px;
+    width:100%;
+    text-align:center;
+  }
+  .smash-orb-wrap{
+    position:relative;
+    width:clamp(220px, 62vw, 280px);
+    height:clamp(220px, 62vw, 280px);
+    margin:16px auto 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .smash-orb{
+    position:relative;
+    z-index:2;
+    width:clamp(200px, 56vw, 260px);
+    height:clamp(200px, 56vw, 260px);
+    border-radius:50%;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    background:radial-gradient(circle at 34% 30%, var(--accent-bright) 0%, var(--accent) 55%, #6E4310 100%);
+    box-shadow:
+      0 0 60px rgba(224,177,94,.55),
+      inset 0 -10px 24px rgba(0,0,0,.35),
+      inset 0 8px 20px rgba(255,255,255,.25);
+    transition:filter .1s ease;
+  }
+  .smash-orb.hit-a, .smash-orb.hit-b{
+    animation:orbPunch .2s ease;
+  }
+  @keyframes orbPunch{
+    0%{transform:scale(1) rotate(0deg);filter:brightness(1);}
+    28%{transform:scale(0.74) rotate(-6deg);filter:brightness(1.6);}
+    60%{transform:scale(1.08) rotate(3deg);filter:brightness(1.1);}
+    100%{transform:scale(1) rotate(0deg);filter:brightness(1);}
+  }
+  .crack{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:2.5px;
+    height:clamp(98px, 26vw, 128px);
+    background:rgba(255,255,255,.85);
+    box-shadow:0 0 6px rgba(255,255,255,.6);
+    opacity:0;
+    transition:opacity .2s ease;
+    z-index:3;
+    pointer-events:none;
+  }
+  .crack.show{opacity:1;}
+  .hit-progress{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+  .smash-panel .response-line{
+    font-size:16px;
+    line-height:1.7;
+    font-weight:600;
+    color:var(--ink);
+    margin:4px 0 14px;
+  }
+  .smash-panel .response-line.hidden, .smash-panel .stack.hidden{display:none;}
+  footer{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+  .mono-num{
+    font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    font-weight:800;
+    color:var(--accent);
+  }
+  .visually-hidden{
+    position:absolute;
+    width:1px;height:1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .chip, .btn, .paper-card, .breathe-circle, .mic-btn{transition:none !important;}
+    .mic-btn.listening{animation:none !important;}
+    .paper-card.shaking{animation:none !important;}
+    .shred-bit{animation:none !important;display:none !important;}
+    .shake-it, .micro-shake-a, .micro-shake-b{animation:none !important;}
+    .smash-orb.hit-a, .smash-orb.hit-b{animation:none !important;}
+    .flash-bomb, .micro-flash, .shockwave, .burst-rays{display:none !important;}
   }
 </style>
 </head>
 <body>
 
-  <div class="frame-scale-wrap" id="frame-scale-wrap">
-    <div class="marvel-device iphone-x" id="marvel-device">
-      <div class="notch">
-        <div class="camera"></div>
-        <div class="speaker"></div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<div class="hero-bar">
+  <button type="button" class="sound-toggle" id="sound-toggle" aria-label="開啟音效" aria-pressed="false">
+    <i class="ph ph-speaker-x"></i>
+  </button>
+  <div class="kicker">Mood Reset</div>
+  <div class="icon-badge"><i class="ph ph-confetti"></i></div>
+  <h1>情緒重開機</h1>
+  <p>選一件煩心事，碎張紙，深呼吸一下，再回去當個人。這裡不會存資料，關掉頁面就什麼都沒留下。</p>
+</div>
+
+<div class="app">
+
+  <main id="stage-select">
+    <p class="section-label">現在是被什麼弄煩的？</p>
+    <div class="chip-grid" id="chip-grid">
+      <button type="button" class="chip" data-cat="aoke" data-label="奧客／客訴">
+        <i class="ph ph-warning-circle"></i><span>奧客／客訴</span>
+      </button>
+      <button type="button" class="chip" data-cat="return" data-label="退換貨爭議">
+        <i class="ph ph-arrows-left-right"></i><span>退換貨爭議</span>
+      </button>
+      <button type="button" class="chip" data-cat="sales" data-label="業績壓力">
+        <i class="ph ph-chart-line-down"></i><span>業績壓力</span>
+      </button>
+      <button type="button" class="chip" data-cat="training" data-label="教育訓練背不完">
+        <i class="ph ph-brain"></i><span>教育訓練背不完</span>
+      </button>
+      <button type="button" class="chip" data-cat="system" data-label="系統當機">
+        <i class="ph ph-desktop"></i><span>系統當機</span>
+      </button>
+      <button type="button" class="chip" data-cat="boss" data-label="主管碎念">
+        <i class="ph ph-chat-teardrop-dots"></i><span>主管碎念</span>
+      </button>
+      <button type="button" class="chip" data-cat="shift" data-label="排班人力不足">
+        <i class="ph ph-calendar-x"></i><span>排班人力不足</span>
+      </button>
+      <button type="button" class="chip" data-cat="other" data-label="其他碎碎念">
+        <i class="ph ph-cloud-lightning"></i><span>其他碎碎念</span>
+      </button>
+    </div>
+
+    <div class="divider-row">
+      <p class="divider-text">或者，打字說出來</p>
+      <button type="button" class="mic-btn" id="mic-btn" aria-label="語音輸入" aria-pressed="false" hidden>
+        <i class="ph ph-microphone"></i>
+      </button>
+    </div>
+    <label class="field-label visually-hidden" for="vent-text">打字說出你的煩心事</label>
+    <textarea id="vent-text" placeholder="打完就會碎光光，不會存起來"></textarea>
+    <p class="voice-hint" id="voice-hint">打字有困難？也可以直接點手機鍵盤上的麥克風圖示，口說轉文字。</p>
+
+    <button type="button" class="btn btn-primary" id="shred-btn" disabled>
+      <i class="ph ph-confetti"></i>碎紙釋放
+    </button>
+
+    <button type="button" class="btn btn-outline" id="smash-entry-btn" style="margin-top:12px;">
+      <i class="ph ph-hand-fist"></i>不想選？直接用力打爆它
+    </button>
+  </main>
+
+  <div class="overlay hidden" id="shred-overlay">
+    <div class="paper-card" id="paper-card"></div>
+  </div>
+
+  <main id="stage-response" class="hidden">
+    <div class="response-icon" id="response-icon"><i class="ph ph-sparkle"></i></div>
+    <p class="response-line" id="response-line"></p>
+    <div class="stack">
+      <button type="button" class="btn btn-outline" id="breathe-btn">
+        <i class="ph ph-wind"></i>深呼吸10秒再去找財神爺
+      </button>
+      <button type="button" class="btn btn-primary" id="return-btn" style="margin-top:0;">
+        <i class="ph ph-arrow-right"></i>回去找財神爺
+      </button>
+    </div>
+  </main>
+
+  <div class="overlay hidden" id="breathe-overlay">
+    <button type="button" class="icon-btn overlay-close" id="breathe-skip">
+      <i class="ph ph-x"></i>提前結束
+    </button>
+    <div class="breathe-circle" id="breathe-circle" aria-live="polite">吸氣</div>
+    <p class="breathe-caption" id="breathe-caption">跟著圈圈的節奏，吸氣、停住、吐氣，重複三次就好。</p>
+  </div>
+
+  <div class="overlay hidden" id="smash-overlay">
+    <button type="button" class="icon-btn overlay-close" id="smash-skip">
+      <i class="ph ph-x"></i>先不打了
+    </button>
+    <div class="overlay-inner smash-panel">
+      <p class="section-label">用力打，打到它爆炸為止</p>
+      <div class="smash-orb-wrap">
+        <div class="crack" style="transform:translate(-50%,0) rotate(18deg);"></div>
+        <div class="crack" style="transform:translate(-50%,0) rotate(110deg);"></div>
+        <div class="crack" style="transform:translate(-50%,0) rotate(205deg);"></div>
+        <div class="crack" style="transform:translate(-50%,0) rotate(295deg);"></div>
+        <button type="button" class="smash-orb" id="smash-orb" aria-label="用力打它"></button>
       </div>
-      <div class="top-bar"></div>
-      <div class="sleep"></div>
-      <div class="bottom-bar"></div>
-      <div class="volume"></div>
-      <div class="overflow">
-        <div class="shadow shadow--tr"></div>
-        <div class="shadow shadow--tl"></div>
-        <div class="shadow shadow--br"></div>
-        <div class="shadow shadow--bl"></div>
-      </div>
-      <div class="inner-shadow"></div>
-      <div class="screen">
-        <iframe src="app.html" title="情緒重開機"></iframe>
+      <p class="hit-progress" id="hit-progress">力量 <span class="mono-num" id="hit-count">0</span> / 18</p>
+      <p class="response-line hidden" id="smash-response-line"></p>
+      <div class="stack hidden" id="smash-result-buttons">
+        <button type="button" class="btn btn-outline" id="smash-again-btn">
+          <i class="ph ph-arrows-clockwise"></i>再打一顆
+        </button>
+        <button type="button" class="btn btn-primary" id="smash-return-btn" style="margin-top:0;">
+          <i class="ph ph-arrow-right"></i>回去找財神爺
+        </button>
       </div>
     </div>
   </div>
 
+  <footer id="footer-count"></footer>
+
+</div>
+
 <script>
 (function(){
   "use strict";
-  var wrap = document.getElementById("frame-scale-wrap");
-  var device = document.getElementById("marvel-device");
 
-  function fitDevice(){
-    device.style.zoom = "1";
-    var rect = device.getBoundingClientRect();
-    var naturalW = rect.width;
-    var naturalH = rect.height;
-    var maxW = Math.min(naturalW, window.innerWidth * 0.9, window.innerHeight * 0.92 * (naturalW / naturalH));
-    var scale = maxW / naturalW;
-    device.style.zoom = String(scale);
-    wrap.style.width = (naturalW * scale) + "px";
-    wrap.style.height = (naturalH * scale) + "px";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var soundOn = localStorage.getItem("moodreset_sound") === "on";
+  var audioCtx = null;
+
+  function getAudioCtx(){
+    if(audioCtx) return audioCtx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    audioCtx = new AC();
+    return audioCtx;
   }
 
-  window.addEventListener("resize", fitDevice);
-  window.addEventListener("load", fitDevice);
-  fitDevice();
+  function playThump(big){
+    if(!soundOn) return;
+    var ctx = getAudioCtx();
+    if(!ctx) return;
+    if(ctx.state === "suspended"){ ctx.resume(); }
+    var now = ctx.currentTime;
+    var dur = big ? 0.42 : 0.14;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(big ? 150 : 220, now);
+    osc.frequency.exponentialRampToValueAtTime(big ? 38 : 70, now + dur);
+    gain.gain.setValueAtTime(big ? 0.85 : 0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+
+    if(big){
+      var bufferSize = Math.floor(ctx.sampleRate * 0.3);
+      var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for(var i=0;i<bufferSize;i++){
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+      var noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      var noiseGain = ctx.createGain();
+      noiseGain.gain.value = 0.35;
+      noise.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noise.start(now);
+    }
+  }
+
+  function renderSoundToggle(){
+    soundToggle.classList.toggle("on", soundOn);
+    soundToggle.setAttribute("aria-pressed", soundOn ? "true" : "false");
+    soundToggle.setAttribute("aria-label", soundOn ? "關閉音效" : "開啟音效");
+    soundToggle.innerHTML = soundOn ? '<i class="ph ph-speaker-high"></i>' : '<i class="ph ph-speaker-x"></i>';
+  }
+
+  soundToggle.addEventListener("click", function(){
+    soundOn = !soundOn;
+    localStorage.setItem("moodreset_sound", soundOn ? "on" : "off");
+    renderSoundToggle();
+    if(soundOn){
+      getAudioCtx();
+      playThump(false);
+    }
+  });
+  renderSoundToggle();
+
+  var starCanvas = document.getElementById("starfield");
+  var starCtx = starCanvas.getContext("2d");
+  var stars = [];
+
+  function buildStars(){
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    starCanvas.width = w;
+    starCanvas.height = h;
+    var count = Math.min(220, Math.floor((w * h) / 9000));
+    stars = [];
+    for(var i = 0; i < count; i++){
+      stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.3 + 0.3,
+        baseAlpha: Math.random() * 0.5 + 0.15,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function drawStars(t){
+    var w = starCanvas.width;
+    var h = starCanvas.height;
+    starCtx.clearRect(0, 0, w, h);
+    stars.forEach(function(s){
+      var alpha = s.baseAlpha;
+      if(!reduceMotion && t !== undefined){
+        alpha = s.baseAlpha + Math.sin((t / 1600) + s.phase) * 0.15;
+        if(alpha < 0.05) alpha = 0.05;
+      }
+      starCtx.beginPath();
+      starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      starCtx.fillStyle = "rgba(200,212,240," + alpha.toFixed(3) + ")";
+      starCtx.fill();
+    });
+  }
+
+  buildStars();
+  drawStars();
+
+  if(!reduceMotion){
+    (function twinkleLoop(t){
+      drawStars(t);
+      window.requestAnimationFrame(twinkleLoop);
+    })(0);
+  }
+
+  window.addEventListener("resize", function(){
+    buildStars();
+    drawStars();
+  });
+
+  var CATEGORY_ICONS = {
+    aoke:"ph-warning-circle",
+    return:"ph-arrows-left-right",
+    sales:"ph-chart-line-down",
+    training:"ph-brain",
+    system:"ph-desktop",
+    boss:"ph-chat-teardrop-dots",
+    shift:"ph-calendar-x",
+    other:"ph-cloud-lightning"
+  };
+
+  var CATEGORY_LINES = {
+    aoke:[
+      "他很大聲，你不用跟他一樣大聲，你比他多一個優點，你下班之後不會再想起他。",
+      "客訴單填完，這件事就正式跟你沒關係了，交給表格去煩惱。",
+      "他只是今天運氣不好剛好選到你，不是你運氣不好剛好選到他，開玩笑的，你今天真的辛苦了。",
+      "你的薪水不包含被吼的加班費，但今天先辛苦了，回去喝口水。"
+    ],
+    return:[
+      "政策不是你訂的，你只是負責被質疑的那個人，辛苦了。",
+      "退換貨規定寫在紙上，客人的情緒寫在他自己心裡，這是兩份不同的文件。",
+      "這張單簽完，事情就結束了，不會延伸到你的下班時間。",
+      "你已經很有耐心了，耐心也是一種戰鬥力，只是沒有寫在績效表上。"
+    ],
+    sales:[
+      "業績數字明天會重新開始算，你的心情不用等到明天才重新開始。",
+      "今天沒達標，不代表你不會賣，只代表今天客人比較忙，不是你比較差。",
+      "數字是一格一格填的，不是一次填滿的，你已經在填了。",
+      "達成率是公司的事，你這個人不是一個數字，先把自己顧好。"
+    ],
+    training:[
+      "資料背不完沒關係，客人問的問題比考卷簡單，考卷才是真的難。",
+      "忘記的東西可以查手冊，記得要下班這件事不用查。",
+      "今天學不會沒關係，明天的你會比今天的你多會一點，這樣就夠了。",
+      "知識塞不進去的時候，先把心情倒出來一點，才有空間裝新的。"
+    ],
+    system:[
+      "不是你的手太慢，是系統自己也想休息一下。",
+      "當機的時候客人在等，但系統重開的時間到了就是到了，急不來的事不用替它著急。",
+      "重新開機這件事，系統會做，你現在也可以做。",
+      "螢幕卡住不代表你卡住，你等一下它就好了。"
+    ],
+    boss:[
+      "被念的時候先聽完，念完的內容不用背起來帶回家。",
+      "主管的心情是主管的事，你把自己的心情顧好就是你的事。",
+      "念是一種溝通方式，不是最好的那種，但你已經聽完了，辛苦了。",
+      "今天被說的話，明天主管可能自己都忘了，你可以先幫他忘記。"
+    ],
+    shift:[
+      "人少事多的時候，你已經在用一個人的力氣做兩個人的事，這件事值得被看見。",
+      "排班表是別人排的，你今天撐過去的辛苦是你自己的。",
+      "缺人的問題不會今天解決，但你今天的班已經快結束了。",
+      "忙到沒空喝水，先喝一口，班表的事晚點再煩惱。"
+    ],
+    other:[
+      "不管今天發生什麼事，你人還站在這裡，這件事本身就很不容易。",
+      "有些煩的事說不清楚也沒關係，碎紙這件事本來就不用邏輯。",
+      "今天的心情先歸零，明天再重新載入就好。",
+      "辛苦的地方寫不出來沒關係，寫不出來也代表真的很辛苦。"
+    ]
+  };
+
+  var GENERIC_LINES = [
+    "打完這段字，這件事就正式從你的腦袋交給螢幕保管了。",
+    "說出來就是一種放下，接下來交給碎紙效果處理。",
+    "文字已經碎光了，剩下的心情也可以跟著碎一點。",
+    "打字發洩比忍著不說健康多了，你做得很好。",
+    "這些字消失之後，不會留在任何地方，你可以放心。",
+    "碎完這段，記得你今天已經很努力了。",
+    "發洩完了，還是要回去向新台幣低頭。"
+  ];
+
+  var lastIndex = {};
+
+  function pickLine(pool, key){
+    if(pool.length === 1) return pool[0];
+    var idx;
+    do{
+      idx = Math.floor(Math.random() * pool.length);
+    }while(idx === lastIndex[key]);
+    lastIndex[key] = idx;
+    return pool[idx];
+  }
+
+  var stageSelect = document.getElementById("stage-select");
+  var stageResponse = document.getElementById("stage-response");
+  var shredOverlay = document.getElementById("shred-overlay");
+  var paperCard = document.getElementById("paper-card");
+  var breatheOverlay = document.getElementById("breathe-overlay");
+  var breatheCircle = document.getElementById("breathe-circle");
+  var breatheCaption = document.getElementById("breathe-caption");
+  var ventText = document.getElementById("vent-text");
+  var shredBtn = document.getElementById("shred-btn");
+  var chips = Array.prototype.slice.call(document.querySelectorAll(".chip"));
+  var responseIcon = document.getElementById("response-icon");
+  var responseLine = document.getElementById("response-line");
+  var returnBtn = document.getElementById("return-btn");
+  var breatheBtn = document.getElementById("breathe-btn");
+  var breatheSkip = document.getElementById("breathe-skip");
+  var footerCount = document.getElementById("footer-count");
+  var micBtn = document.getElementById("mic-btn");
+  var voiceHint = document.getElementById("voice-hint");
+  var smashEntryBtn = document.getElementById("smash-entry-btn");
+  var smashOverlay = document.getElementById("smash-overlay");
+  var smashOrb = document.getElementById("smash-orb");
+  var hitCountEl = document.getElementById("hit-count");
+  var smashResponseLine = document.getElementById("smash-response-line");
+  var smashResultButtons = document.getElementById("smash-result-buttons");
+  var smashSkip = document.getElementById("smash-skip");
+  var smashAgainBtn = document.getElementById("smash-again-btn");
+  var smashReturnBtn = document.getElementById("smash-return-btn");
+  var soundToggle = document.getElementById("sound-toggle");
+
+  var selectedCategory = null;
+  var breatheTimers = [];
+
+  function updateShredButton(){
+    var hasText = ventText.value.trim().length > 0;
+    shredBtn.disabled = !(selectedCategory || hasText);
+  }
+
+  chips.forEach(function(chip){
+    chip.addEventListener("click", function(){
+      var already = chip.classList.contains("selected");
+      chips.forEach(function(c){ c.classList.remove("selected"); });
+      if(already){
+        selectedCategory = null;
+      }else{
+        chip.classList.add("selected");
+        selectedCategory = chip.getAttribute("data-cat");
+        ventText.value = "";
+      }
+      updateShredButton();
+    });
+  });
+
+  ventText.addEventListener("input", function(){
+    if(ventText.value.trim().length > 0){
+      chips.forEach(function(c){ c.classList.remove("selected"); });
+      selectedCategory = null;
+    }
+    updateShredButton();
+  });
+
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = null;
+  var isListening = false;
+  var manualStop = false;
+
+  if(SpeechRec){
+    micBtn.hidden = false;
+    recognition = new SpeechRec();
+    recognition.lang = "zh-TW";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = function(event){
+      var text = "";
+      for(var i = event.resultIndex; i < event.results.length; i++){
+        if(event.results[i].isFinal){
+          text += event.results[i][0].transcript;
+        }
+      }
+      if(text){
+        var needsSeparator = ventText.value.length > 0 && !/[\s，。！？]$/.test(ventText.value);
+        ventText.value = ventText.value + (needsSeparator ? "，" : "") + text;
+        ventText.dispatchEvent(new Event("input"));
+      }
+    };
+
+    recognition.onerror = function(event){
+      manualStop = true;
+      var reason = event && event.error;
+      if(reason === "not-allowed" || reason === "service-not-allowed"){
+        voiceHint.textContent = "語音辨識需要麥克風權限，請到手機設定允許，或直接點鍵盤上的麥克風圖示，口說轉文字。";
+      }else{
+        voiceHint.textContent = "這台裝置的語音辨識暫時無法使用，請直接點手機鍵盤上的麥克風圖示，口說轉文字。";
+      }
+      resetMicUI();
+    };
+
+    recognition.onend = function(){
+      if(isListening && !manualStop){
+        try{
+          recognition.start();
+          return;
+        }catch(e){}
+      }
+      resetMicUI();
+    };
+
+    micBtn.addEventListener("click", function(){
+      if(isListening){ stopListening(); }else{ startListening(); }
+    });
+  } else {
+    voiceHint.textContent = "打字有困難？可以直接點手機鍵盤上的麥克風圖示，口說轉文字。";
+  }
+
+  function startListening(){
+    if(!recognition) return;
+    manualStop = false;
+    try{
+      recognition.start();
+      isListening = true;
+      micBtn.classList.add("listening");
+      micBtn.setAttribute("aria-pressed", "true");
+      micBtn.setAttribute("aria-label", "停止語音輸入");
+      micBtn.innerHTML = '<i class="ph-fill ph-circle"></i>';
+    }catch(e){
+      voiceHint.textContent = "這台裝置的語音辨識暫時無法使用，請直接點手機鍵盤上的麥克風圖示，口說轉文字。";
+      resetMicUI();
+    }
+  }
+
+  function stopListening(){
+    manualStop = true;
+    if(recognition){
+      try{ recognition.stop(); }catch(e){}
+    }
+    resetMicUI();
+  }
+
+  function resetMicUI(){
+    isListening = false;
+    micBtn.classList.remove("listening");
+    micBtn.setAttribute("aria-pressed", "false");
+    micBtn.setAttribute("aria-label", "語音輸入");
+    micBtn.innerHTML = '<i class="ph ph-microphone"></i>';
+  }
+
+  function todayKey(){
+    var d = new Date();
+    var month = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return "moodreset_" + d.getFullYear() + month + day;
+  }
+
+  function bumpCounter(){
+    var key = todayKey();
+    var count = parseInt(localStorage.getItem(key) || "0", 10) + 1;
+    localStorage.setItem(key, String(count));
+    renderCounter(count);
+  }
+
+  function renderCounter(count){
+    footerCount.innerHTML = "今天已經有 <span class=\"mono-num\">" + count + "</span> 次在這裡碎紙充電，你不是一個人";
+  }
+
+  function initCounter(){
+    var count = parseInt(localStorage.getItem(todayKey()) || "0", 10);
+    renderCounter(count);
+  }
+
+  function spawnParticles(container, opts){
+    opts = opts || {};
+    var total = opts.total || 72;
+    var distMin = opts.distMin != null ? opts.distMin : 200;
+    var distSpread = opts.distSpread != null ? opts.distSpread : 340;
+    var driftY = opts.driftY != null ? opts.driftY : 110;
+    var durMin = opts.durMin != null ? opts.durMin : 800;
+    var durSpread = opts.durSpread != null ? opts.durSpread : 350;
+    var fragment = document.createDocumentFragment();
+    var bits = [];
+    for(var i=0;i<total;i++){
+      var bit = document.createElement("span");
+      bit.className = "shred-bit";
+      var angle = Math.random() * Math.PI * 2;
+      var distance = distMin + Math.random() * distSpread;
+      var dx = Math.cos(angle) * distance;
+      var dy = Math.sin(angle) * distance + driftY;
+      var rot = (Math.random() * 2160 - 1080) + "deg";
+      var delay = Math.floor(Math.random() * 100) + "ms";
+      var dur = (durMin + Math.random() * durSpread).toFixed(0) + "ms";
+      var w = (7 + Math.random() * 28).toFixed(1) + "px";
+      var h = (4 + Math.random() * 12).toFixed(1) + "px";
+      bit.style.setProperty("--dx", dx.toFixed(1) + "px");
+      bit.style.setProperty("--dy", dy.toFixed(1) + "px");
+      bit.style.setProperty("--rot", rot);
+      bit.style.setProperty("--delay", delay);
+      bit.style.setProperty("--dur", dur);
+      bit.style.setProperty("--w", w);
+      bit.style.setProperty("--h", h);
+      if(i % 2 === 0){ bit.style.background = "var(--ink)"; bit.style.opacity = "0.85"; }
+      bits.push(bit);
+      fragment.appendChild(bit);
+    }
+    container.appendChild(fragment);
+    return bits;
+  }
+
+  function spawnShockwave(container){
+    var wave = document.createElement("div");
+    wave.className = "shockwave";
+    container.appendChild(wave);
+    window.setTimeout(function(){ wave.remove(); }, 700);
+
+    var wave2 = document.createElement("div");
+    wave2.className = "shockwave wave-2";
+    container.appendChild(wave2);
+    window.setTimeout(function(){ wave2.remove(); }, 800);
+
+    var rays = document.createElement("div");
+    rays.className = "burst-rays";
+    container.appendChild(rays);
+    window.setTimeout(function(){ rays.remove(); }, 550);
+  }
+
+  function spawnFlash(){
+    var flash = document.createElement("div");
+    flash.className = "flash-bomb";
+    document.body.appendChild(flash);
+    window.setTimeout(function(){ flash.remove(); }, 400);
+  }
+
+  function clearParticles(container){
+    var bits = container.querySelectorAll(".shred-bit");
+    bits.forEach(function(b){ b.remove(); });
+  }
+
+  function runShred(){
+    var customText = ventText.value.trim();
+    var displayText = customText.length > 0 ? customText : (
+      chips.filter(function(c){ return c.getAttribute("data-cat") === selectedCategory; })[0].getAttribute("data-label")
+    );
+
+    paperCard.textContent = displayText;
+    stageSelect.classList.add("hidden");
+    shredOverlay.classList.remove("hidden");
+    paperCard.classList.remove("gone");
+
+    if(reduceMotion){
+      window.setTimeout(function(){
+        shredOverlay.classList.add("hidden");
+        showResponse(customText);
+      }, 250);
+      return;
+    }
+
+    paperCard.classList.add("shaking");
+
+    window.setTimeout(function(){
+      paperCard.classList.add("gone");
+      spawnParticles(shredOverlay);
+      spawnShockwave(shredOverlay);
+      spawnFlash();
+      shredOverlay.classList.add("shake-it");
+      if("vibrate" in navigator){
+        try{ navigator.vibrate([18,12,18,12,90]); }catch(e){}
+      }
+      window.setTimeout(function(){
+        shredOverlay.classList.remove("shake-it");
+      }, 320);
+    }, 280);
+
+    window.setTimeout(function(){
+      shredOverlay.classList.add("hidden");
+      clearParticles(shredOverlay);
+      paperCard.classList.remove("shaking", "gone");
+      showResponse(customText);
+    }, 1550);
+  }
+
+  function showResponse(customText){
+    var line, iconClass;
+    if(customText.length > 0){
+      line = pickLine(GENERIC_LINES, "generic");
+      iconClass = "ph-sparkle";
+    }else{
+      line = pickLine(CATEGORY_LINES[selectedCategory], selectedCategory);
+      iconClass = CATEGORY_ICONS[selectedCategory];
+    }
+    responseIcon.innerHTML = '<i class="ph ' + iconClass + '"></i>';
+    responseLine.textContent = line;
+    stageResponse.classList.remove("hidden");
+    bumpCounter();
+  }
+
+  function resetToSelect(){
+    ventText.value = "";
+    chips.forEach(function(c){ c.classList.remove("selected"); });
+    selectedCategory = null;
+    updateShredButton();
+    stageResponse.classList.add("hidden");
+    stageSelect.classList.remove("hidden");
+  }
+
+  shredBtn.addEventListener("click", runShred);
+  returnBtn.addEventListener("click", resetToSelect);
+
+  function clearBreatheTimers(){
+    breatheTimers.forEach(function(t){ window.clearTimeout(t); });
+    breatheTimers = [];
+  }
+
+  function runBreatheRound(round){
+    breatheCircle.className = "breathe-circle inhale";
+    breatheCircle.textContent = "吸氣";
+    breatheCaption.textContent = "慢慢吸氣，數到四。";
+
+    breatheTimers.push(window.setTimeout(function(){
+      breatheCircle.className = "breathe-circle hold";
+      breatheCircle.textContent = "停住";
+      breatheCaption.textContent = "停在這裡，數到二。";
+    }, 4000));
+
+    breatheTimers.push(window.setTimeout(function(){
+      breatheCircle.className = "breathe-circle exhale";
+      breatheCircle.textContent = "吐氣";
+      breatheCaption.textContent = "慢慢吐氣，數到六，把剛剛的煩心事一起吐出去。";
+    }, 6000));
+
+    breatheTimers.push(window.setTimeout(function(){
+      if(round < 3){
+        runBreatheRound(round + 1);
+      }else{
+        breatheCircle.textContent = "完成";
+        breatheCaption.textContent = "三次深呼吸做完了，準備好就回去找財神爺吧。";
+        breatheTimers.push(window.setTimeout(closeBreathe, 1600));
+      }
+    }, 12000));
+  }
+
+  function openBreathe(){
+    stageResponse.classList.add("hidden");
+    breatheOverlay.classList.remove("hidden");
+    if(reduceMotion){
+      breatheCircle.textContent = "吸氣、停住、吐氣";
+      breatheCaption.textContent = "重複三次，準備好就按提前結束去找財神爺。";
+      return;
+    }
+    runBreatheRound(1);
+  }
+
+  function closeBreathe(){
+    clearBreatheTimers();
+    breatheOverlay.classList.add("hidden");
+    resetToSelect();
+  }
+
+  breatheBtn.addEventListener("click", openBreathe);
+  breatheSkip.addEventListener("click", closeBreathe);
+
+  var SMASH_TARGET = 18;
+  var smashHits = 0;
+  var smashDone = false;
+  var punchToggle = false;
+  var shakeToggle = false;
+
+  function updateHitCount(){
+    hitCountEl.textContent = String(Math.min(smashHits, SMASH_TARGET));
+  }
+
+  function revealCracks(){
+    var level = Math.min(4, Math.floor((smashHits / SMASH_TARGET) * 4));
+    var cracks = smashOverlay.querySelectorAll(".crack");
+    cracks.forEach(function(c, idx){
+      if(idx < level) c.classList.add("show");
+    });
+  }
+
+  function flashOrb(){
+    smashOrb.style.filter = "brightness(1.7)";
+    window.setTimeout(function(){ smashOrb.style.filter = ""; }, 100);
+  }
+
+  function punchOrb(){
+    flashOrb();
+    if(reduceMotion) return;
+    punchToggle = !punchToggle;
+    smashOrb.classList.remove(punchToggle ? "hit-b" : "hit-a");
+    smashOrb.classList.add(punchToggle ? "hit-a" : "hit-b");
+  }
+
+  function microShakeOverlay(){
+    if(reduceMotion) return;
+    shakeToggle = !shakeToggle;
+    smashOverlay.classList.remove(shakeToggle ? "micro-shake-b" : "micro-shake-a");
+    smashOverlay.classList.add(shakeToggle ? "micro-shake-a" : "micro-shake-b");
+  }
+
+  function spawnHitSpark(){
+    if(reduceMotion) return;
+    var flash = document.createElement("div");
+    flash.className = "micro-flash";
+    document.body.appendChild(flash);
+    window.setTimeout(function(){ flash.remove(); }, 200);
+
+    var bits = spawnParticles(smashOverlay, {
+      total: 12,
+      distMin: 30,
+      distSpread: 80,
+      driftY: 10,
+      durMin: 260,
+      durSpread: 150
+    });
+    window.setTimeout(function(){
+      bits.forEach(function(b){ b.remove(); });
+    }, 500);
+  }
+
+  function handleSmashTap(){
+    if(smashDone) return;
+    smashHits++;
+    updateHitCount();
+    revealCracks();
+    punchOrb();
+    microShakeOverlay();
+    spawnHitSpark();
+    playThump(false);
+    if("vibrate" in navigator){
+      try{ navigator.vibrate([8,4,14]); }catch(e){}
+    }
+    if(smashHits >= SMASH_TARGET){
+      finishSmash();
+    }
+  }
+
+  function finishSmash(){
+    smashDone = true;
+    smashOrb.style.visibility = "hidden";
+    playThump(true);
+
+    if(reduceMotion){
+      showSmashResponse();
+      return;
+    }
+
+    spawnParticles(smashOverlay);
+    spawnShockwave(smashOverlay);
+    spawnFlash();
+    smashOverlay.classList.add("shake-it");
+    if("vibrate" in navigator){
+      try{ navigator.vibrate([25,15,25,15,140]); }catch(e){}
+    }
+    window.setTimeout(function(){
+      smashOverlay.classList.remove("shake-it");
+    }, 320);
+
+    window.setTimeout(function(){
+      clearParticles(smashOverlay);
+      showSmashResponse();
+    }, 1550);
+  }
+
+  function showSmashResponse(){
+    var line = pickLine(GENERIC_LINES, "smash");
+    smashResponseLine.textContent = line;
+    smashResponseLine.classList.remove("hidden");
+    smashResultButtons.classList.remove("hidden");
+    bumpCounter();
+  }
+
+  function resetSmash(){
+    smashHits = 0;
+    smashDone = false;
+    updateHitCount();
+    smashOverlay.querySelectorAll(".crack").forEach(function(c){ c.classList.remove("show"); });
+    smashOrb.style.visibility = "visible";
+    smashResponseLine.classList.add("hidden");
+    smashResponseLine.textContent = "";
+    smashResultButtons.classList.add("hidden");
+  }
+
+  function openSmash(){
+    stageSelect.classList.add("hidden");
+    resetSmash();
+    smashOverlay.classList.remove("hidden");
+  }
+
+  function closeSmash(){
+    smashOverlay.classList.add("hidden");
+    stageSelect.classList.remove("hidden");
+  }
+
+  function returnFromSmash(){
+    smashOverlay.classList.add("hidden");
+    resetToSelect();
+  }
+
+  smashOverlay.addEventListener("click", function(e){
+    if(e.target.closest(".icon-btn, #smash-result-buttons")) return;
+    handleSmashTap();
+  });
+  smashEntryBtn.addEventListener("click", openSmash);
+  smashSkip.addEventListener("click", closeSmash);
+  smashAgainBtn.addEventListener("click", resetSmash);
+  smashReturnBtn.addEventListener("click", returnFromSmash);
+
+  initCounter();
+  updateShredButton();
 })();
 </script>
 </body>
