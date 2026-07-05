@@ -730,6 +730,7 @@
 
   var soundOn = localStorage.getItem("moodreset_sound") === "on";
   var audioCtx = null;
+  var soundToggle = document.getElementById("sound-toggle");
 
   function getAudioCtx(){
     if(audioCtx) return audioCtx;
@@ -958,7 +959,6 @@
   var smashSkip = document.getElementById("smash-skip");
   var smashAgainBtn = document.getElementById("smash-again-btn");
   var smashReturnBtn = document.getElementById("smash-return-btn");
-  var soundToggle = document.getElementById("sound-toggle");
 
   var selectedCategory = null;
   var breatheTimers = [];
