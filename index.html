@@ -79,13 +79,21 @@
     box-shadow:var(--glow-panel), inset 0 1px 0 rgba(255,255,255,.06);
     padding:calc(env(safe-area-inset-top,0px) + 26px) 20px 30px;
   }
+  .hero-top-row{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:14px;
+  }
   .sound-toggle{
     position:absolute;
-    top:max(16px, env(safe-area-inset-top));
-    right:max(16px, env(safe-area-inset-right));
+    top:50%;
+    right:0;
+    transform:translateY(-50%);
     z-index:3;
-    width:38px;
-    height:38px;
+    width:32px;
+    height:32px;
     border-radius:50%;
     border:1px solid var(--line);
     background:rgba(255,255,255,.05);
@@ -93,7 +101,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:17px;
+    font-size:15px;
     cursor:pointer;
   }
   .sound-toggle.on{
@@ -106,7 +114,7 @@
     letter-spacing:.28em;
     text-transform:uppercase;
     color:var(--accent);
-    margin-bottom:14px;
+    margin-bottom:0;
   }
   .hero-bar .icon-badge{
     width:58px;height:58px;
@@ -318,9 +326,7 @@
     z-index:50;
   }
   .overlay-close{
-    position:absolute;
-    top:max(20px, env(safe-area-inset-top));
-    right:max(20px, env(safe-area-inset-right));
+    flex:none;
   }
   .overlay.hidden{display:none;}
   #shred-overlay{
@@ -608,10 +614,12 @@
 <canvas id="starfield" aria-hidden="true"></canvas>
 
 <div class="hero-bar">
-  <button type="button" class="sound-toggle" id="sound-toggle" aria-label="開啟音效" aria-pressed="false">
-    <i class="ph ph-speaker-x"></i>
-  </button>
-  <div class="kicker">Mood Reset</div>
+  <div class="hero-top-row">
+    <div class="kicker">Mood Reset</div>
+    <button type="button" class="sound-toggle" id="sound-toggle" aria-label="開啟音效" aria-pressed="false">
+      <i class="ph ph-speaker-x"></i>
+    </button>
+  </div>
   <div class="icon-badge"><i class="ph ph-confetti"></i></div>
   <h1>情緒重開機</h1>
   <p>選一件煩心事，碎張紙，深呼吸一下，再回去當個人。這裡不會存資料，關掉頁面就什麼都沒留下。</p>
