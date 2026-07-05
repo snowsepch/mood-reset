@@ -1458,7 +1458,7 @@
   style.textContent =
     ".frame-scale-wrap{position:relative;}" +
     "#marvel-device{position:absolute;top:0;left:0;transform-origin:top left;filter:drop-shadow(0 40px 70px rgba(0,0,0,.55));}" +
-    ".marvel-device .screen{display:flex;flex-direction:column;align-items:center;}";
+    ".marvel-device .screen{display:flex;flex-direction:column;align-items:center;overflow-y:auto !important;-webkit-overflow-scrolling:touch;}";
   document.head.appendChild(style);
 
   var link = document.createElement("link");
