@@ -1187,9 +1187,15 @@
 
     if(reduceMotion){
       window.setTimeout(function(){
+        paperCard.style.transition = "opacity .5s ease";
+        paperCard.style.opacity = "0";
+      }, 700);
+      window.setTimeout(function(){
         shredOverlay.classList.add("hidden");
+        paperCard.style.opacity = "";
+        paperCard.style.transition = "";
         showResponse(customText);
-      }, 250);
+      }, 1200);
       return;
     }
 
